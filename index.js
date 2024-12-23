@@ -2,11 +2,11 @@ const express = require("express");
 const dotenv = require("dotenv");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
-const router = require("./route");
+const router = require("./src/route");
 
 dotenv.config();
 
-const connect = require("./connect");
+const connect = require("./src/connect");
 
 const app = express();
 
