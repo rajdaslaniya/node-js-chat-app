@@ -24,7 +24,7 @@ const signUp = async (req, res) => {
 
     const userExist = await User.findOne({ email });
     if (userExist) {
-      return res.status(400).json({ message: "User already exists" });
+      return res.status(400).json({ message: "User email already exists" });
     }
 
     hobbies = [...new Set(hobbies)];
@@ -74,12 +74,12 @@ const login = async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({ message: "Invalid email or password" });
+      return res.status(404).json({ message: "Invalid email or password" });
     }
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(401).json({ message: "Invalid email or password" });
+      return res.status(404).json({ message: "Invalid email or password" });
     }
 
     const token = createToken(user.email, user._id);
@@ -90,8 +90,8 @@ const login = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        token,
       },
+      token,
     });
   } catch (error) {
     console.error("Error during login:", error);
