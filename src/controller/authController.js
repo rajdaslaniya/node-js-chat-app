@@ -24,7 +24,7 @@ const signUp = async (req, res) => {
 
     const userExist = await User.findOne({ email });
     if (userExist) {
-      return res.status(400).json({ message: "User already exists" });
+      return res.status(400).json({ message: "User email already exists" });
     }
 
     hobbies = [...new Set(hobbies)];
