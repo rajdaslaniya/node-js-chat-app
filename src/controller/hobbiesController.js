@@ -42,9 +42,16 @@ const getHobbies = async (req, res) => {
 const updateHobbies = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name } = req.body;
+    let { name } = req.body;
     if (!name || name.trim() === "") {
       return res.status(400).json({ message: "Name is required" });
+    }
+
+    name = name.trim();
+
+    const checkIsPresent = await Hobbies.findOne({ name });
+    if (checkIsPresent) {
+      return res.status(400).json({ message: "Hobbies already present" });
     }
 
     const data = await Hobbies.findByIdAndUpdate(

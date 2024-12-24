@@ -1,16 +1,9 @@
 const express = require("express");
-const { signUp } = require("../controller/authController");
-const {
-  createHobbies,
-  getHobbies,
-  updateHobbies,
-} = require("../controller/hobbiesController");
+const signUp = require("./auth.router");
 const router = express.Router();
 
-router.get("/sign-up", signUp);
-router.post("/create-hobbies", createHobbies);
-router.get("/hobbies", getHobbies);
-
-router.patch("/hobbies/:id", updateHobbies);
+const hobbiesRouter = require("./hobbies.router");
+router.use("/hobbies", hobbiesRouter);
+router.use("/auth", signUp);
 
 module.exports = router;
