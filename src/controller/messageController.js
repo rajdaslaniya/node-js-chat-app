@@ -3,16 +3,17 @@ const Chat = require("../model/Chat");
 
 const addMessage = async (req, res) => {
   try {
-    const { sender, message } = req.body;
+    const { user_id } = req;
+    const { message } = req.body;
     const { id: chatId } = req.params;
 
-    if (!sender || !message || !chatId) {
+    if (!message || !chatId) {
       return res.status(400).json({
-        message: "Invalid data. Required fields: sender, message, and chatId.",
+        message: "Invalid data. Required fields: message, and chatId.",
       });
     }
 
-    const chat = await Chat.findOne({ _id: chatId, users: { $in: sender } });
+    const chat = await Chat.findOne({ _id: chatId, users: { $in: user_id } });
     if (!chat) {
       return res
         .status(404)
@@ -21,11 +22,13 @@ const addMessage = async (req, res) => {
 
     const newMessage = new Message({
       chat_id: chatId,
-      sender,
+      sender: user_id,
       message,
     });
 
     await newMessage.save();
+
+    await Chat.findByIdAndUpdate(chatId, { latest_message: newMessage._id });
 
     return res.status(200).json({
       message: "Message added successfully.",
@@ -61,7 +64,7 @@ const getMessage = async (req, res) => {
     const messages = await Message.find({
       chat_id: chatId,
     })
-      .sort({ createdAt: -1 })
+      .sort({ createdAt: 1 })
       .select(["sender", "message", "createdAt", "updatedAt"])
       .populate("sender", ["email", "name", "avatar"]);
 

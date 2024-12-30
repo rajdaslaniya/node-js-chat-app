@@ -59,10 +59,79 @@ const createChat = async (req, res) => {
   }
 };
 
+const getChatList = async (req, res) => {
+  try {
+    const { user_id } = req;
+    const chats = await Chat.find({ users: { $in: user_id } })
+      .populate("users", ["name", "email", "avatar"])
+      .populate({
+        path: "latest_message",
+        populate: {
+          path: "sender",
+          select: "name email avatar",
+        },
+      });
+    let updated_data = JSON.parse(JSON.stringify(chats));
+    updated_data = updated_data.map((chat) => {
+      if (!chat.is_group) {
+        return {
+          ...chat,
+          users: chat.users.filter((user) => user._id !== user_id),
+        };
+      }
+      return chat;
+    });
+    return res
+      .status(200)
+      .json({ message: "Chat list data", data: updated_data });
+  } catch (error) {
+    console.log("getChatList  error", error);
+    return res.status(500).json({
+      message: error.message || "Something went wrong. Please try again.",
+    });
+  }
+};
+
+const getSingleChat = async (req, res) => {
+  try {
+    const { id: chat_id } = req.params;
+    const { user_id } = req;
+    const chat = await Chat.findOne({ _id: chat_id }).populate("users", [
+      "name",
+      "email",
+      "avatar",
+    ]);
+    if (!chat) {
+      return res.status(404).json({ message: "chat does not exist" });
+    }
+    if (!chat.is_group) {
+      let updated_data = JSON.parse(JSON.stringify(chat));
+      updated_data = {
+        ...updated_data,
+        users: updated_data.users.filter((data) => data._id !== user_id),
+      };
+      return res.status(200).json({
+        message: "Chat details fetched successfully",
+        data: updated_data,
+      });
+    }
+    return res
+      .status(200)
+      .json({ message: "Chat details fetched successfully", data: chat });
+  } catch (error) {
+    console.log("getChatList  error", error);
+    return res.status(500).json({
+      message: error.message || "Something went wrong. Please try again.",
+    });
+  }
+};
+
 const getUsers = async (req, res) => {
   try {
     const { user_id } = req;
-    const users = await User.find({ _id: { $nin: user_id } });
+    const users = await User.find({ _id: { $nin: user_id } }).select(
+      "-password, -hobbies"
+    );
     return res
       .status(200)
       .json({ message: "User data fetched successfully", data: users });
@@ -74,4 +143,20 @@ const getUsers = async (req, res) => {
   }
 };
 
-module.exports = { createChat, getUsers };
+const getUser = async (req, res) => {
+  try {
+    const { user_id } = req;
+    const user = await User.findOne({ _id: user_id }).select("-password");
+    return res.status(200).json({
+      message: "User Detail fetched successfully",
+      data: user,
+    });
+  } catch (error) {
+    console.error("Error during getUser:", error);
+    return res.status(500).json({
+      message: error.message || "Something went wrong. Please try again.",
+    });
+  }
+};
+
+module.exports = { createChat, getUsers, getUser, getChatList, getSingleChat };

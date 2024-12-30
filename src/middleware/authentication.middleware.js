@@ -3,11 +3,11 @@ const { verifyToken } = require("../utils/utils");
 
 const checkAuthentication = async (req, res, next) => {
   try {
-    const { authorization } = req.headers;
-    if (!authorization) {
+    const { token } = req.headers;
+    if (!token) {
       return res.status(400).json({ message: "Invalid token" });
     }
-    const { email, id } = verifyToken(authorization);
+    const { email, id } = verifyToken(token);
     const user = await User.find({ email, _id: id });
     if (!user) {
       return res.status(401).json({
