@@ -1,4 +1,4 @@
-const express = require("express");
+const { app, server } = require("./src/socket/socket");
 const dotenv = require("dotenv");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
@@ -9,8 +9,6 @@ dotenv.config();
 
 const connect = require("./src/connect");
 
-const app = express();
-
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -20,7 +18,7 @@ app.use(router);
 
 connect
   .then(() => {
-    app.listen(process.env.PORT || 5000, () => {
+    server.listen(process.env.PORT || 5000, () => {
       console.log(`Server is running on port ${process.env.PORT || 5000}`);
     });
   })

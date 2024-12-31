@@ -1,5 +1,6 @@
 const Message = require("../model/Message");
 const Chat = require("../model/Chat");
+const { io } = require("../socket/socket");
 
 const addMessage = async (req, res) => {
   try {
@@ -28,11 +29,20 @@ const addMessage = async (req, res) => {
 
     await newMessage.save();
 
+    const newMessageData = await Message.findOne({
+      _id: newMessage._id,
+    })
+      .select(["sender", "message", "createdAt", "updatedAt"])
+      .populate("sender", ["email", "name", "avatar"]);
+
     await Chat.findByIdAndUpdate(chatId, { latest_message: newMessage._id });
 
+    io.to(chatId).emit("receiveNewMessage", {
+      data: newMessageData,
+    });
     return res.status(200).json({
       message: "Message added successfully.",
-      data: newMessage,
+      data: newMessageData,
     });
   } catch (error) {
     console.error("Error adding message:", error);
