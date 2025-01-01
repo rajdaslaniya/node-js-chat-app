@@ -128,10 +128,13 @@ const getSingleChat = async (req, res) => {
 
 const getUsers = async (req, res) => {
   try {
-    const { user_id } = req;
-    const users = await User.find({ _id: { $nin: user_id } }).select(
-      "-password, -hobbies"
-    );
+    let { user_id, hobbies } = req;
+    hobbies = JSON.parse(JSON.stringify(hobbies));
+    console.log("hobbies", hobbies);
+    const users = await User.find({
+      _id: { $nin: user_id },
+      hobbies: { $in: hobbies },
+    }).select("-password, -hobbies");
     return res
       .status(200)
       .json({ message: "User data fetched successfully", data: users });

@@ -8,7 +8,7 @@ const checkAuthentication = async (req, res, next) => {
       return res.status(400).json({ message: "Invalid token" });
     }
     const { email, id } = verifyToken(token);
-    const user = await User.find({ email, _id: id });
+    const user = await User.findOne({ email, _id: id });
     if (!user) {
       return res.status(401).json({
         message: "Unauthorized to perform this task",
@@ -16,6 +16,7 @@ const checkAuthentication = async (req, res, next) => {
     }
     req.user_id = id;
     req.email = email;
+    req.hobbies = user.hobbies;
     next();
   } catch (error) {
     return res.status(401).json({
