@@ -1,6 +1,6 @@
 const Message = require("../model/Message");
 const Chat = require("../model/Chat");
-const { io, getReceiverSocketId } = require("../socket/socket");
+const { io } = require("../socket/socket");
 
 const addMessage = async (req, res) => {
   try {
@@ -42,13 +42,10 @@ const addMessage = async (req, res) => {
     );
     const users = JSON.parse(JSON.stringify(updatedChatData.users));
     for (let i of users) {
-      let socketId = getReceiverSocketId(i);
-      if (socketId) {
-        io.to(socketId).emit("receivingLatestMessage", {
-          chat_id: chatId,
-          latest_message: newMessageData,
-        });
-      }
+      io.to(i).emit("receivingLatestMessage", {
+        chat_id: chatId,
+        latest_message: newMessageData,
+      });
     }
 
     io.to(chatId).emit("receiveNewMessage", {

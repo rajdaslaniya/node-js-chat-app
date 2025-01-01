@@ -1,5 +1,6 @@
 const express = require("express");
 const http = require("http");
+const { join } = require("path");
 const { Server } = require("socket.io");
 
 const app = express();
@@ -11,23 +12,43 @@ const io = new Server(server, {
   },
 });
 
-const onlineUsers = {};
-
-const getReceiverSocketId = (user_id) => {
-  return onlineUsers[user_id];
-};
+let onlineUsers = {};
 
 io.on("connection", (socket) => {
   console.log(`User connected: ${socket.id}`);
 
   socket.on("userOnline", (user_id) => {
-    if (user_id) onlineUsers[user_id] = socket.id;
-    console.log("connected", Object.keys(onlineUsers));
+    // If the user doesn't exist in onlineUsers, initialize an empty array
+    if (!onlineUsers[user_id]) {
+      onlineUsers[user_id] = [];
+    }
+
+    // If the socket ID is not already in the user's list, add it
+    if (!onlineUsers[user_id].includes(socket.id)) {
+      onlineUsers[user_id].push(socket.id);
+    }
+
+    // Join the room for the user
+    socket.join(user_id);
   });
 
   socket.on("userOffline", (user_id) => {
-    delete onlineUsers[user_id];
-    console.log("disconnected", Object.keys(onlineUsers));
+    // Check if the user exists in onlineUsers
+    if (onlineUsers[user_id]) {
+      // Remove the socket ID from the user's list
+      onlineUsers[user_id] = onlineUsers[user_id].filter(
+        (id) => id !== socket.id
+      );
+
+      // If there are no more socket IDs for that user, remove the user entry
+      if (onlineUsers[user_id].length === 0) {
+        delete onlineUsers[user_id];
+      }
+    }
+    // Log the updated onlineUsers
+
+    // Leave the room for the user
+    socket.leave(user_id);
   });
 
   // Join a chat room
@@ -48,4 +69,4 @@ io.on("connection", (socket) => {
   });
 });
 
-module.exports = { io, server, app, getReceiverSocketId };
+module.exports = { io, server, app };
