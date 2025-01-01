@@ -11,19 +11,24 @@ const io = new Server(server, {
   },
 });
 
-// const onlineUsers = {};
+const onlineUsers = {};
+
+const getReceiverSocketId = (user_id) => {
+  return onlineUsers[user_id];
+};
 
 io.on("connection", (socket) => {
   console.log(`User connected: ${socket.id}`);
 
-  // socket.on("connected", (user_id) => {
-  //   if (!onlineUsers[user_id]) {
-  //     onlineUsers[user_id] = socket.id;
-  //   } else {
-  //     onlineUsers[user_id] = socket.id;
-  //   }
-  //   console.log("connected", onlineUsers);
-  // });
+  socket.on("userOnline", (user_id) => {
+    if (user_id) onlineUsers[user_id] = socket.id;
+    console.log("connected", Object.keys(onlineUsers));
+  });
+
+  socket.on("userOffline", (user_id) => {
+    delete onlineUsers[user_id];
+    console.log("disconnected", Object.keys(onlineUsers));
+  });
 
   // Join a chat room
   socket.on("joinChatRoom", (room) => {
@@ -43,4 +48,4 @@ io.on("connection", (socket) => {
   });
 });
 
-module.exports = { io, server, app };
+module.exports = { io, server, app, getReceiverSocketId };
